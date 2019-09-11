@@ -189,7 +189,7 @@ class HeatmiserNeostat(ClimateDevice):
     @property
     def preset_mode(self):
         """Return preset mode."""
-        if self.away:
+        if self._away:
             return PRESET_AWAY
         if self._standby:
             return PRESET_STANDBY
