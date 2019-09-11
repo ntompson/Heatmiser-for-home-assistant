@@ -50,7 +50,7 @@ SUPPORT_FLAGS = 0
 # Heatmiser doesn't really have an off mode - standby is a preset - implement later
 hvac_modes = [HVAC_MODE_HEAT]
 
-PRESET_STANDBY = "Standby"
+PRESET_STANDBY = "standby"
 
 preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_STANDBY]
 
