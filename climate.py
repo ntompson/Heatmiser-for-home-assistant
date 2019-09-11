@@ -223,11 +223,16 @@ class HeatmiserNeostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """ Set new target temperature. """
-        response = self.json_request({"SET_TEMP": [int(kwargs.get(ATTR_TEMPERATURE)), self._name]})
-        if response:
-            _LOGGER.info("set_temperature response: %s " % response)
-            # Need check for success here
-            # {'result': 'temperature was set'}
+        if self._away || self._standby:
+            response = self.json_request({"SET_FROST": [int(kwargs.get(ATTR_TEMPERATURE)), self._name]})
+            if response:
+                _LOGGER.info("set_temperature response (frost): %s " % response)
+        else:
+            response = self.json_request({"SET_TEMP": [int(kwargs.get(ATTR_TEMPERATURE)), self._name]})
+            if response:
+                _LOGGER.info("set_temperature response: %s " % response)
+                # Need check for success here
+                # {'result': 'temperature was set'}
 
     def update(self):
         """ Get Updated Info. """
