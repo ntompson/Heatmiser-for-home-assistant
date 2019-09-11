@@ -30,6 +30,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
     HVAC_MODE_AUTO,
+    PRESET_NONE,
+    PRESET_AWAY
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.const import (CONF_HOST,CONF_PORT,CONF_NAME)
@@ -39,7 +41,7 @@ import json
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = '2.0.2'
+VERSION = '2.0.3'
 
 SUPPORT_FLAGS = 0
 
@@ -47,6 +49,10 @@ SUPPORT_FLAGS = 0
 #hvac_modes=[HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 # Heatmiser doesn't really have an off mode - standby is a preset - implement later
 hvac_modes = [HVAC_MODE_HEAT]
+
+PRESET_STANDBY = "standby"
+
+preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_STANDBY]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -79,11 +85,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             else:
                 temperature_unit = TEMP_FAHRENHEIT
             away = device['AWAY']
+            standby = device['STANDBY']
             current_temperature = device['CURRENT_TEMPERATURE']
             set_temperature = device['CURRENT_SET_TEMPERATURE']
 
             _LOGGER.info("Thermostat Name: %s " % name)
             _LOGGER.info("Thermostat Away Mode: %s " % away)
+            _LOGGER.info("Thermostat Standby Mode: %s" % standby)
             _LOGGER.info("Thermostat Current Temp: %s " % current_temperature)
             _LOGGER.info("Thermostat Set Temp: %s " % set_temperature)
             _LOGGER.info("Thermostat Unit Of Measurement: %s " % temperature_unit)
@@ -91,7 +99,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if (('TIMECLOCK' in device['STAT_MODE']) and (ExcludeTimeClock == True)):
               _LOGGER.debug("Found a Neostat configured in timer mode named: %s skipping" % device['device'])
             else:
-              thermostats.append(HeatmiserNeostat(temperature_unit, away, host, port, name))
+              thermostats.append(HeatmiserNeostat(temperature_unit, away, standby, host, port, name))
 
         elif device['DEVICE_TYPE'] == 6:
             _LOGGER.debug("Found a Neoplug named: %s skipping" % device['device'])
@@ -102,18 +110,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class HeatmiserNeostat(ClimateDevice):
     """ Represents a Heatmiser Neostat thermostat. """
-    def __init__(self, unit_of_measurement, away, host, port, name="Null"):
+    def __init__(self, unit_of_measurement, away, standby, host, port, name="Null"):
         self._name = name
         self._unit_of_measurement = unit_of_measurement
         self._away = away
+        self._standby = standby
         self._host = host
         self._port = port
         #self._type = type Neostat vs Neostat-e
         self._hvac_action = None
         self._hvac_mode = None
         self._hvac_modes = hvac_modes
+        self._preset_modes = preset_modes
         self._support_flags = SUPPORT_FLAGS
-        self._support_flags = self._support_flags | SUPPORT_TARGET_TEMPERATURE
+        self._support_flags = self._support_flags | SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
         self.update()
 
     @property
@@ -176,15 +186,23 @@ class HeatmiserNeostat(ClimateDevice):
         """Return the list of available operation modes."""
         return self._hvac_modes
 
-    # @property
-    # def preset_mode(self):
-    #     """Return preset mode."""
-    #     return self._preset
+    @property
+    def preset_mode(self):
+        """Return preset mode."""
+        if self.away:
+            return PRESET_AWAY
+        if self._standby:
+            return PRESET_STANDBY
+        return PRESET_NONE
 
-    # @property
-    # def preset_modes(self):
-    #     """Return preset modes."""
-    #     return self._preset_modes
+    @property
+    def preset_modes(self):
+        """Return preset modes."""
+        return self._preset_modes
+
+    # def set_preset_mode(self, preset_mode):
+    #     """Set new target preset mode."""
+
 
     def set_temperature(self, **kwargs):
         """ Set new target temperature. """
@@ -210,6 +228,8 @@ class HeatmiserNeostat(ClimateDevice):
                 else:
                   self._temperature_unit = TEMP_FAHRENHEIT
                 self._away = device['AWAY']
+                self._standby = device['STANDBY']
+                
                 self._target_temperature =  round(float(device["CURRENT_SET_TEMPERATURE"]), 2)
                 self._current_temperature = round(float(device["CURRENT_TEMPERATURE"]), 2)
                 self._current_humidity = round(float(device["HUMIDITY"]), 2)
