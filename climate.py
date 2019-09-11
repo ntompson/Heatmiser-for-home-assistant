@@ -203,20 +203,20 @@ class HeatmiserNeostat(ClimateDevice):
     def set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
         if preset_mode == PRESET_AWAY:
-            response = json_request({"AWAY_ON": device})
+            response = self.json_request({"AWAY_ON": self._name})
             if response:
                 _LOGGER.info("away_on: %s" % response)
 
         elif preset_mode == PRESET_STANDBY:
-            response = json_request({"FROST_ON": device})
+            response = self.json_request({"FROST_ON": self._name})
             if response:
                 _LOGGER.info("frost_on: %s" % response)
 
         else:
-            response = json_request({"FROST_OFF": device})
+            response = self.json_request({"FROST_OFF": self._name})
             if response:
                 _LOGGER.info("frost_off: %s" % response)
-            response = json_request({"AWAY_OFF": device})
+            response = self.json_request({"AWAY_OFF": self._name})
             if response:
                 _LOGGER.info("away_off: %s" % response)           
 
