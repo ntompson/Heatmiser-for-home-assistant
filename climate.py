@@ -50,7 +50,7 @@ SUPPORT_FLAGS = 0
 # Heatmiser doesn't really have an off mode - standby is a preset - implement later
 hvac_modes = [HVAC_MODE_HEAT]
 
-PRESET_STANDBY = "standby"
+PRESET_STANDBY = "Standby"
 
 preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_STANDBY]
 
@@ -200,8 +200,25 @@ class HeatmiserNeostat(ClimateDevice):
         """Return preset modes."""
         return self._preset_modes
 
-    # def set_preset_mode(self, preset_mode):
-    #     """Set new target preset mode."""
+    def set_preset_mode(self, preset_mode):
+        """Set new target preset mode."""
+        if preset_mode == PRESET_AWAY:
+            response = json_request({"AWAY_ON": device})
+            if response:
+                _LOGGER.info("away_on: %s" % response)
+
+        elif preset_mode == PRESET_STANDBY:
+            response = json_request({"FROST_ON": device})
+            if response:
+                _LOGGER.info("frost_on: %s" % response)
+
+        else:
+            response = json_request({"FROST_OFF": device})
+            if response:
+                _LOGGER.info("frost_off: %s" % response)
+            response = json_request({"AWAY_OFF": device})
+            if response:
+                _LOGGER.info("away_off: %s" % response)           
 
 
     def set_temperature(self, **kwargs):
