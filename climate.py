@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     thermostats = []
 
-    NeoHubJson = HeatmiserNeostat(TEMP_CELSIUS, False, host, port).json_request({"INFO": 0})
+    NeoHubJson = HeatmiserNeostat(TEMP_CELSIUS, False, False, host, port).json_request({"INFO": 0})
 
     _LOGGER.debug(NeoHubJson)
 
@@ -229,7 +229,7 @@ class HeatmiserNeostat(ClimateDevice):
                   self._temperature_unit = TEMP_FAHRENHEIT
                 self._away = device['AWAY']
                 self._standby = device['STANDBY']
-                
+
                 self._target_temperature =  round(float(device["CURRENT_SET_TEMPERATURE"]), 2)
                 self._current_temperature = round(float(device["CURRENT_TEMPERATURE"]), 2)
                 self._current_humidity = round(float(device["HUMIDITY"]), 2)
